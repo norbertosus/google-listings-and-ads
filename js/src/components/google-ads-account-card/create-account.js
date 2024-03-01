@@ -12,10 +12,11 @@ import AppButton from '.~/components/app-button';
 import AccountCard, { APPEARANCE } from '.~/components/account-card';
 import CreateAccountButton from './create-account-button';
 import useApiFetchCallback from '.~/hooks/useApiFetchCallback';
+import useGoogleAccountCheck from '.~/hooks/useGoogleAccountCheck';
 import { useAppDispatch } from '.~/data';
 import useDispatchCoreNotices from '.~/hooks/useDispatchCoreNotices';
 
-const ClaimTermsAndCreateAccountButton = () => {
+const ClaimTermsAndCreateAccountButton = ( { disabled } ) => {
 	const { createNotice } = useDispatchCoreNotices();
 	const { fetchGoogleAdsAccount } = useAppDispatch();
 	const [ fetchAccountLoading, setFetchAccountLoading ] = useState( false );
@@ -24,6 +25,7 @@ const ClaimTermsAndCreateAccountButton = () => {
 			path: `/wc/gla/ads/accounts`,
 			method: 'POST',
 		} );
+	const { google } = useGoogleAccountCheck();
 
 	const handleCreateAccount = async () => {
 		try {
@@ -49,26 +51,38 @@ const ClaimTermsAndCreateAccountButton = () => {
 		setFetchAccountLoading( false );
 	};
 
+	if ( ! google || google.active !== 'yes' ) {
+		return null;
+	}
+
 	return (
 		<CreateAccountButton
 			loading={ createLoading || fetchAccountLoading }
 			onCreateAccount={ handleCreateAccount }
+			disabled={ disabled }
 		/>
 	);
 };
 
 const CreateAccount = ( props ) => {
-	const { allowShowExisting, onShowExisting } = props;
+	const { allowShowExisting, onShowExisting, disabled } = props;
 
 	return (
 		<AccountCard
+			disabled={ disabled }
 			appearance={ APPEARANCE.GOOGLE_ADS }
 			alignIcon="top"
-			indicator={ <ClaimTermsAndCreateAccountButton /> }
+			indicator={
+				<ClaimTermsAndCreateAccountButton disabled={ disabled } />
+			}
 		>
 			{ allowShowExisting && (
 				<Section.Card.Footer>
-					<AppButton isLink onClick={ onShowExisting }>
+					<AppButton
+						isLink
+						onClick={ onShowExisting }
+						disabled={ disabled }
+					>
 						{ __(
 							'Or, use your existing Google Ads account',
 							'google-listings-and-ads'
